@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace Bluewater7;
 
-//use Bluewater7\Helper;
+use Bluewater7\Helper as Helper;
 
 /**
  * Allows for multi-dimensional ini files.
@@ -99,9 +99,13 @@ namespace Bluewater7;
   *
   * @PHPUnit Not Defined
   *
+  * @tutorial tutorial.pkg description
+  * @example url://path/to/example.php description
+  *
   * @todo Create PHPUnit test, tutorials and example files for this class
   * @todo look into converting this into a DBA access type class via SPL
   * @todo Change __construct so that it respects the singleton instance of Bluewater_Helper
+  * @todo add post process lock file to speed subsequent loading
   *
   */
 class Config
@@ -186,7 +190,7 @@ class Config
      * @final
      * @access private
      *
-     * @param boolean $process_sections    By setting the process_sections parameter to TRUE,
+     * @param boolean $process_sections   By setting the process_sections parameter to TRUE,
      *                                    you get a multidimensional array, with the section
      *                                    names and settings included. The default for
      *                                    process_sections is FALSE
@@ -202,7 +206,7 @@ class Config
     final private function __construct(bool $process_sections = true)
     {
         // Load Helper Support Class
-        self::$helper = new Helper;
+        self::$helper = Helper::getInstance();
 
         // Path to main Config file to load raw data
         self::load(\BLUEWATER . '/Bluewater.ini.php', $process_sections);
