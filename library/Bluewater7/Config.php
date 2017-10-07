@@ -41,7 +41,9 @@ declare(strict_types=1);
 
 namespace Bluewater7;
 
-use Bluewater7\Helper as Helper;
+use Bluewater7\Helper;
+use Bluewater7\Helper\Helper_Array_Insert as array_insert;
+use Bluewater7\Support\Singleton;
 
 /**
  * Allows for multi-dimensional ini files.
@@ -108,7 +110,7 @@ use Bluewater7\Helper as Helper;
   * @todo add post process lock file to speed subsequent loading
   *
   */
-class Config
+class Config extends Singleton
 {
 // ==========================================================
 // Class Constants
@@ -203,7 +205,7 @@ class Config
      *
      * @PHPUnit Not Defined
      */
-    final private function __construct(bool $process_sections = true)
+    final protected function __construct(bool $process_sections = true)
     {
         // Load Helper Support Class
         self::$helper = Helper::getInstance();
@@ -244,27 +246,6 @@ class Config
     }
 
     /**
-     * A private 'clone' method it ensure that this singleton class
-     * can not be duplicated.
-     *
-     * @author Walter Torres <walter@torres.ws>
-
-     * @access private
-     *
-     * @param void
-     * @return void
-     *
-     * @throws void
-     *
-     * @since 1.0
-     *
-     * @PHPUnit Not Defined
-     */
-    private function __clone()
-    {
-    }
-
-    /**
      * Makes sure that this call is a single instance and returns that instance
      *
      * @author Walter Torres <walter@torres.ws>
@@ -287,7 +268,7 @@ class Config
      *
      * @PHPUnit Not Defined
      */
-    final public static function init(bool $processSections = true): Config
+    final public static function Xinit(bool $processSections = true): Config
     {
         // If we don't have an instance, make one
         if (null!==self::$instance) {

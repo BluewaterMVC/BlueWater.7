@@ -34,7 +34,7 @@
  */
 
 declare(strict_types=1); // strict mode
-namespace Bluewater7;
+namespace Bluewater7\Support;
 
 /**
  * PHP Singleton Control Class
@@ -51,13 +51,16 @@ namespace Bluewater7;
  * @example url://path/to/example.php description
  *
  */
-abstract class Singleton_Abstract
+abstract class Singleton
 {
 // ==========================================================
 // Class Constants
 
 // ==========================================================
 // Class Properties
+
+    /** @var array $instances */
+    private static $instances = [];
 
 // ==========================================================
 // Class Methods
@@ -77,10 +80,7 @@ abstract class Singleton_Abstract
     * @return void
     *
     */
-    final private function __construct()
-    {
-        // Empty on purpose
-    }
+    abstract protected function __construct();
 
 
    /**
@@ -92,20 +92,20 @@ abstract class Singleton_Abstract
     */
     final public static function getInstance(bool $force = null)
     {
-        /** @var array $ao_instance */
-        static $ao_instance = [];
-
         $called_class = static::class;
 
-        if (($force === true) || (isset($ao_instance[$called_class]) === false)) {
-            $ao_instance[$called_class] = new $called_class();
+        if (($force === true) || (isset(self::$instances[$called_class]) === false)) {
+            self::$instances[$called_class] = new $called_class();
         }
 
-        return $ao_instance[$called_class];
+        return self::$instances[$called_class];
     }
 
    /**
     * Prevent singletons from being cloned
+    *
+    * Based upon solution defined at
+    * @link http://stackoverflow.com/questions/203336/creating-the-singleton-design-pattern-in-php5#answer-15870364
     *
     * @access final
     * @private
@@ -132,10 +132,31 @@ abstract class Singleton_Abstract
     * @param  void
     * @return void
     *
+    * @throws \Exception
+    *
+    */
+    final private function __sleep()
+    {
+        throw new \Exception('Cannot serialize singleton');
+    }
+
+   /**
+    * Prevent singletons from being unserialized
+    *
+    * @access final
+    * @private
+    *
+    * @since 1.0
+    *
+    * @param  void
+    * @return void
+    *
+    * @throws \Exception
+    *
     */
     final private function __wakeup()
     {
-        // Empty on purpose
+        throw new \Exception('Cannot unserialize singleton');
     }
 }
 

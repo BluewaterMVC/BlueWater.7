@@ -36,11 +36,12 @@
 (strict_types=1); // strict mode
 namespace Bluewater7;
 
+use \Bluewater7\Support\Singleton;
+
 /**
  * Controller Helper Class
  *
- * Multiline description can go here and
- * it will be picked up as written.
+ * Multiline description can go here and it will be picked up as written.
  * DON'T!! but a blank line between the desc text and the CVS/SVN
  * info below, unless you don't this info in your phpDocs
  *
@@ -55,7 +56,7 @@ namespace Bluewater7;
  * @version $Revision: 1.0 $
  *
  */
-class Helper extends Singleton_Abstract
+class Helper extends Singleton
 {
 
 // ==========================================================
@@ -63,6 +64,17 @@ class Helper extends Singleton_Abstract
 
 // ==========================================================
 // Class Properties
+
+   /**
+    * Helper Class name
+    *
+    * @var string
+    * @access protected
+    * @static
+    *
+    * @since 1.0
+    */
+    static protected $helperName;
 
    /**
     * Helper Class name
@@ -116,19 +128,23 @@ class Helper extends Singleton_Abstract
      */
     final public function __call(string $_method, array $_args)
     {
+        self::$helperName = $_method;
+
         // Attempt to load Controller
-        $this->loadHelper($_method);
+        $this->__construct();
+        self::$newHelper = 'Bluewater7\Helper\\' . self::$newHelper;
 
         // Attempt to instantiate new class object
-        if (\class_exists(self::$newHelper, false)) {
+        if (\class_exists(self::$newHelper)) {
             $new_helper = new self::$newHelper;
 
             // Load Helper Support Class, so Helpers can use Helpers!!!
             $new_helper->helper = self::getInstance(true);
-        } else {
+        }
+        else {
             // Now we THROW an exception to handle this failure on our
             // own terms.
-            throw new \Exception('Helper: "' . $_method . '" method could not be located.');
+            throw new \Exception('Helper: "' . self::$newHelper . '" method could not be located.');
         }
 
         // Call Method with parameters
@@ -156,26 +172,26 @@ class Helper extends Singleton_Abstract
     *
     * @throws void
     */
-    private function loadHelper(string $_helperName)
+    final protected function __construct()
     {
+        if (self::$helperName === null) {
+            return;
+        }
+
         // Tear apart helper name, capitalize first letter, and put back together
         /** @var string $filename */
-        $filename = \implode('_', \array_map([$this, 'upperFirst'], \explode('_', $_helperName)));
+        $filename = \implode('_', \array_map([$this, 'upperFirst'], \explode('_', self::$helperName)));
 
         // Create Class name
         self::$newHelper = 'Helper_' . $filename;
 
-        /** @var string $app_helper_path */
-        $app_helper_path  = \APP_ROOT  . '/Helper/' . $filename . '.php';
-
         /** @var string $helper_path */
-        $helper_path = \BLUEWATER . '/Helper/' . $filename . '.php';
+        $helper_path  = \APP_ROOT  . \DS . 'Helper' . \DS . $filename . '.php';
 
         // Try to load Application level Helper first, as this will supersede
         // Bluewater 7 MVC Library Helpers
-        /** @var string $app_helper_path */
-        if (\file_exists($app_helper_path)) {
-            $helper_path = $app_helper_path;
+        if (\file_exists($helper_path) === false) {
+            $helper_path = \BLUEWATER . \DS . 'Helper' . \DS . $filename . '.php';
         }
         // Otherwise try to load Bluewater Library Helper
         else if (\file_exists($helper_path) === false) {
@@ -188,8 +204,8 @@ class Helper extends Singleton_Abstract
         // it will be added to the shutdown functions list.
         // This is not to be confused with the magic '__destruct()'
         // method within PHP 5
-        if (\method_exists($_helperName, 'destruct')) {
-            \register_shutdown_function([$_helperName, 'destruct']);
+        if (\method_exists(self::$helperName, 'destruct')) {
+            \register_shutdown_function([self::$helperName, 'destruct']);
         }
     }
 
