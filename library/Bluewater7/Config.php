@@ -106,8 +106,7 @@ use Bluewater7\Support\Singleton;
   *
   * @todo Create PHPUnit test, tutorials and example files for this class
   * @todo look into converting this into a DBA access type class via SPL
-  * @todo Change __construct so that it respects the singleton instance of Bluewater_Helper
-  * @todo add post process lock file to speed subsequent loading
+  * @todo add memcach and DB config storage options
   *
   */
 class Config extends Singleton
@@ -117,17 +116,16 @@ class Config extends Singleton
 
 // ==========================================================
 // Class Properties
-
-   /**
-    * Class instance
-    *
-    * @var \Bluewater7\Config
-    * @access private
-    * @static
-    *
-    * @since 1.0
-    */
-    private static $instance = false;
+    /**
+     * Class instance
+     *
+     * @var string
+     * @access private
+     * @static
+     *
+     * @since 1.0
+     */
+    private static $saveFile = \BLUEWATER . '/Bluewater.ini';
 
    /**
     * Config data in named array
@@ -207,75 +205,46 @@ class Config extends Singleton
      */
     final protected function __construct(bool $process_sections = true)
     {
-        // Load Helper Support Class
-        self::$helper = Helper::getInstance();
+        if (! self::loadConf()) {
+            // Load Helper Support Class
+            self::$helper = Helper::getInstance();
 
-        // Path to main Config file to load raw data
-        self::load(\BLUEWATER . '/Bluewater.ini.php', $process_sections);
+            // Path to main Config file to load raw data
+            self::load(\BLUEWATER . '/Bluewater.ini.php', $process_sections);
 
-        // Load all INI files in APP Config directory
-        foreach (new \DirectoryIterator(\APP_ROOT . '/Config') as $ini_file) {
-            if ($ini_file->isFile()) {
-                if (\substr($ini_file->getFilename(), -7) === 'ini.php') {
-                    self::load(\APP_ROOT . '/Config/' . $ini_file->getFilename(), $process_sections);
+            // Load all INI files in APP Config directory
+            foreach (new \DirectoryIterator(\APP_ROOT . '/Config') as $ini_file) {
+                if ($ini_file->isFile()) {
+                    if (\substr($ini_file->getFilename(), -7) === 'ini.php') {
+                        self::load(\APP_ROOT . '/Config/' . $ini_file->getFilename(), $process_sections);
+                    }
                 }
             }
-        }
 
-        // Parse config data
-        self::parse();
+            // Parse config data
+            self::parse();
 
-        // Transfer temp data into config array
-        self::$conf = self::$result;
-        self::$result = null;
+            // Transfer temp data into config array
+            self::$conf = self::$result;
+            self::$result = null;
 
-        // Process i18n settings
-        /**
-         * @TODO get bindtextdomain/gnu_gettext.dll to work
-         */
+            // Process i18n settings
+            /**
+             * @TODO get bindtextdomain/gnu_gettext.dll to work
+             */
 //        self::setLocale();
 
 
-        /**
-         * @TODO need to thrown an exception if TZ is not defined
-         */
-        if (self::config('general', 'tz')) {
-            // Set default TZ
-            \date_default_timezone_set(self::config('general', 'tz'));
-        }
-    }
+            /**
+             * @TODO need to thrown an exception if TZ is not defined
+             */
+            if (self::config('general', 'tz')) {
+                // Set default TZ
+                \date_default_timezone_set(self::config('general', 'tz'));
+            }
 
-    /**
-     * Makes sure that this call is a single instance and returns that instance
-     *
-     * @author Walter Torres <walter@torres.ws>
-     *
-     * @uses class Bluewater_Config
-     *
-     * @final
-     * @access public
-     * @static
-     *
-     * @param boolean $processSections    By setting the process_sections parameter to TRUE,
-     *                                    you get a multidimensional array, with the section
-     *                                    names and settings included. The default for
-     *                                    process_sections is FALSE
-     * @return Config $instance           Class instance
-     *
-     * @throws void
-     *
-     * @since 1.0
-     *
-     * @PHPUnit Not Defined
-     */
-    final public static function Xinit(bool $processSections = true): Config
-    {
-        // If we don't have an instance, make one
-        if (null!==self::$instance) {
-            self::$instance = new self($processSections);
+            self::saveConf();
         }
-
-        return self::$instance;
     }
 
    /**
@@ -989,6 +958,71 @@ class Config extends Singleton
                 unset(self::$result[$key]);
             }
         }
+    }
+
+    /**
+     * Attempt to load SERIALIZED conf data
+     *
+     * @author Walter Torres <walter@torres.ws>
+     *
+     * @uses property $saveFile
+     * @uses property $conf
+     *
+     * @static
+     *
+     * @param void
+     * @return bool
+     *
+     * @since 1.0
+     *
+     * @PHPUnit Not Defined
+     */
+    private static function loadConf()
+    {
+        /** @var array $conf_data */
+        if ($conf_data = @\file_get_contents(self::$saveFile, false)) {
+            $conf_data = \unserialize($conf_data);
+
+            self::$conf = $conf_data['conf'];
+
+            /** @var string $constant */
+            foreach ($conf_data['constants'] as $constant => $value) {
+                if (! \defined(\strtoupper($constant))) {
+                    \define(\strtoupper($constant), $value);
+                }
+            }
+        }
+
+        return (bool)$conf_data;
+    }
+
+    /**
+     * Attempt to save SERIALIZED conf data
+     *
+     * @author Walter Torres <walter@torres.ws>
+     *
+     * @uses property $saveFile
+     * @uses property $conf
+     *
+     * @static
+     *
+     * @param void
+     * @return void
+     *
+     * @since 1.0
+     *
+     * @PHPUnit Not Defined
+     */
+    private static function saveConf()
+    {
+        /** @var array $constants */
+        $constants = \get_defined_constants(true);
+
+        /** @var array $conf_data */
+        $conf_data['constants'] = $constants['user'];
+        $conf_data['conf'] = self::$conf;
+
+        \file_put_contents(self::$saveFile, \serialize($conf_data), LOCK_EX);
     }
 }
 
