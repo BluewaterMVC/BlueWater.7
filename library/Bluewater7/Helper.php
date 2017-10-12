@@ -36,7 +36,7 @@
 (strict_types=1); // strict mode
 namespace Bluewater7;
 
-use \Bluewater7\Support\Singleton;
+use \Bluewater7\Traits\Singleton;
 
 /**
  * Controller Helper Class
@@ -56,8 +56,11 @@ use \Bluewater7\Support\Singleton;
  * @version $Revision: 1.0 $
  *
  */
-class Helper extends Singleton
+class Helper
 {
+// ==========================================================
+// Class Traits
+    use Singleton;
 
 // ==========================================================
 // Class Constants
