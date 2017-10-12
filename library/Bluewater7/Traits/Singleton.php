@@ -34,7 +34,7 @@
  */
 
 declare(strict_types=1); // strict mode
-namespace Bluewater7\Support;
+namespace Bluewater7\Traits;
 
 /**
  * PHP Singleton Control Class
@@ -51,7 +51,7 @@ namespace Bluewater7\Support;
  * @example url://path/to/example.php description
  *
  */
-abstract class Singleton
+trait Singleton
 {
 // ==========================================================
 // Class Constants

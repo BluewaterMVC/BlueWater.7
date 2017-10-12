@@ -43,7 +43,7 @@ namespace Bluewater7;
 
 use Bluewater7\Helper;
 use Bluewater7\Helper\Helper_Array_Insert as array_insert;
-use Bluewater7\Support\Singleton;
+use Bluewater7\Traits\Singleton;
 
 /**
  * Allows for multi-dimensional ini files.
@@ -109,8 +109,9 @@ use Bluewater7\Support\Singleton;
   * @todo add memcach and DB config storage options
   *
   */
-class Config extends Singleton
+class Config
 {
+    use Singleton;
 // ==========================================================
 // Class Constants
 
